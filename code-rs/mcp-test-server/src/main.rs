@@ -60,7 +60,7 @@ fn main() {
                 let result = json!({
                     "capabilities": { "tools": { "listChanged": true } },
                     "serverInfo": { "name": "codex-mcp-test-server", "version": "0.0.1" },
-                    "protocolVersion": "2025-06-18"
+                    "protocolVersion": "2025-11-25"
                 });
                 let resp = JsonRpcResp { jsonrpc: "2.0".into(), id: req.id, result: Some(result), error: None };
                 let _ = writeln!(stdout, "{}", serde_json::to_string(&resp).unwrap());

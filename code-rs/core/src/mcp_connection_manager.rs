@@ -274,7 +274,7 @@ impl McpConnectionManager {
                         // an MCP client.
                         user_agent: None,
                     },
-                    protocol_version: mcp_types::MCP_SCHEMA_VERSION.to_owned(),
+                    protocol_version: mcp_types::MCP_LATEST_SCHEMA_VERSION.to_owned(),
                 };
 
                 let client = match transport {

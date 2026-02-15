@@ -405,10 +405,10 @@ where
     }
     if let Err(err) = fs::rename(&tmp_path, &path) {
         let _ = fs::remove_file(&tmp_path);
-        file.unlock()?;
+        FileExt::unlock(&file)?;
         return Err(err);
     }
-    file.unlock()?;
+    FileExt::unlock(&file)?;
     Ok(())
 }
 
@@ -698,7 +698,7 @@ fn append_rate_limit_warning_log(
         message,
     );
     let write_res = file.write_all(line.as_bytes());
-    let unlock_res = file.unlock();
+    let unlock_res = FileExt::unlock(&file);
     write_res?;
     unlock_res?;
     Ok(())

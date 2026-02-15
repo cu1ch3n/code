@@ -14,7 +14,8 @@ use mcp_types::InitializeRequestParams;
 use mcp_types::InitializeResult;
 use mcp_types::ListToolsRequestParams;
 use mcp_types::ListToolsResult;
-use mcp_types::MCP_SCHEMA_VERSION;
+use mcp_types::MCP_LATEST_SCHEMA_VERSION;
+use mcp_types::MCP_SUPPORTED_SCHEMA_VERSIONS;
 use rmcp::model::CallToolRequestParam;
 use rmcp::model::InitializeRequestParam;
 use rmcp::model::PaginatedRequestParam;
@@ -144,7 +145,7 @@ impl RmcpClient {
     }
 
     /// Perform the initialization handshake with the MCP server.
-    /// https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle#initialization
+    /// https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle#initialization
     pub async fn initialize(
         &self,
         params: InitializeRequestParams,
@@ -191,11 +192,11 @@ impl RmcpClient {
             .ok_or_else(|| anyhow!("handshake succeeded but server info was missing"))?;
         let initialize_result: InitializeResult = convert_to_mcp(initialize_result_rmcp)?;
 
-        if initialize_result.protocol_version != MCP_SCHEMA_VERSION {
+        if !mcp_types::is_supported_schema_version(initialize_result.protocol_version.as_str()) {
             let reported_version = initialize_result.protocol_version.clone();
+            let supported_versions = supported_schema_versions_display();
             return Err(anyhow!(
-                "MCP server reported protocol version {reported_version}, but this client expects {}. Update either side so both speak the same schema.",
-                MCP_SCHEMA_VERSION
+                "MCP server reported protocol version {reported_version}, but this client supports {supported_versions}. Update either side so both speak a shared schema version."
             ));
         }
 
@@ -255,15 +256,21 @@ impl RmcpClient {
 
 fn handshake_failed_error(err: impl Into<anyhow::Error>) -> anyhow::Error {
     let err = err.into();
+    let supported_versions = supported_schema_versions_display();
     anyhow!(
-        "handshaking with MCP server failed: {err} (this client supports MCP schema version {MCP_SCHEMA_VERSION})"
+        "handshaking with MCP server failed: {err} (this client prefers MCP schema version {MCP_LATEST_SCHEMA_VERSION} and supports {supported_versions})"
     )
 }
 
 fn handshake_timeout_error(duration: Duration) -> anyhow::Error {
+    let supported_versions = supported_schema_versions_display();
     anyhow!(
-        "timed out handshaking with MCP server after {duration:?} (expected MCP schema version {MCP_SCHEMA_VERSION})"
+        "timed out handshaking with MCP server after {duration:?} (this client prefers MCP schema version {MCP_LATEST_SCHEMA_VERSION} and supports {supported_versions})"
     )
+}
+
+fn supported_schema_versions_display() -> String {
+    MCP_SUPPORTED_SCHEMA_VERSIONS.join(", ")
 }
 
 #[cfg(test)]
@@ -271,14 +278,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn mcp_schema_version_is_well_formed() {
-        assert!(!MCP_SCHEMA_VERSION.is_empty());
-        let parts: Vec<&str> = MCP_SCHEMA_VERSION.split('-').collect();
-        assert_eq!(
-            parts.len(),
-            3,
-            "MCP_SCHEMA_VERSION should be in YYYY-MM-DD format"
-        );
-        assert!(parts.iter().all(|segment| !segment.trim().is_empty()));
+    fn mcp_schema_versions_are_well_formed() {
+        assert!(!MCP_SUPPORTED_SCHEMA_VERSIONS.is_empty());
+        assert!(MCP_SUPPORTED_SCHEMA_VERSIONS.contains(&MCP_LATEST_SCHEMA_VERSION));
+
+        for version in MCP_SUPPORTED_SCHEMA_VERSIONS {
+            let parts: Vec<&str> = version.split('-').collect();
+            assert_eq!(
+                parts.len(),
+                3,
+                "MCP schema versions should be in YYYY-MM-DD format"
+            );
+            assert!(parts.iter().all(|segment| !segment.trim().is_empty()));
+        }
     }
 }

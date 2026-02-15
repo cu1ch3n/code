@@ -68,7 +68,7 @@ impl BrowserLaunchLockFile {
 
 impl Drop for BrowserLaunchLockFile {
     fn drop(&mut self) {
-        let _ = self.file.unlock();
+        let _ = FileExt::unlock(&self.file);
     }
 }
 

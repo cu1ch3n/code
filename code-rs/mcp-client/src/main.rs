@@ -20,7 +20,7 @@ use mcp_types::ClientCapabilities;
 use mcp_types::Implementation;
 use mcp_types::InitializeRequestParams;
 use mcp_types::ListToolsRequestParams;
-use mcp_types::MCP_SCHEMA_VERSION;
+use mcp_types::MCP_LATEST_SCHEMA_VERSION;
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
@@ -68,7 +68,7 @@ async fn main() -> Result<()> {
             // not be used when Codex is an MCP client.
             user_agent: None,
         },
-        protocol_version: MCP_SCHEMA_VERSION.to_owned(),
+        protocol_version: MCP_LATEST_SCHEMA_VERSION.to_owned(),
     };
     let timeout = Some(Duration::from_secs(10));
     let response = client.initialize(params, timeout).await?;

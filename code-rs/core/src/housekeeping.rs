@@ -80,7 +80,7 @@ impl HeldLock {
 
 impl Drop for HeldLock {
     fn drop(&mut self) {
-        let _ = self.0.unlock();
+        let _ = FileExt::unlock(&self.0);
     }
 }
 
